@@ -47,6 +47,10 @@ def proxy_check(proxy):
             'Error check proxy {proxy_addr}: {description}'.format(proxy_addr=full_proxy_addr, description=str(e)))
         return None
 
+    if real_ip == EXTERNAL_IP:
+        logging.debug('This proxy is not anonymous: {proxy_addr}'.format(proxy_addr=full_proxy_addr))
+        return None
+
     if country_code not in PROXY_COUNTRIES.keys():
         logging.fatal('Unsupported country {country_code} detected'.format(country_code=country_code))
         return None
@@ -63,13 +67,15 @@ def proxy_check(proxy):
         'proxy_host': proxy_host,
         'proxy_port': proxy_port,
         'country_code': country_code,
+        'name': '{country_code}_{peer_counter}'.format(country_code=country_code,
+                                                       peer_counter=PROXY_COUNT_BY_COUNTRY[country_code]),
         'response_time': response_time,
     }
 
-    PROXY_COUNTRIES[country_code].append(result)
-
     PROXY_COUNT_BY_COUNTRY[country_code] += 1
     TMP_DATA['all_proxy_count'] += 1
+
+    PROXY_COUNTRIES[country_code].append(result)
 
     logging.debug('Working proxy found: %s' % proxy_addr)
 
@@ -85,28 +91,19 @@ def update_squid3_forward_conf():
 
     country_counter = 1
     for proxy_country in sorted(PROXY_COUNTRIES.keys()):
-        squid_conf.write('# Country {proxy_country} configs: \n'.format(proxy_country=proxy_country))
-
         PROXY_COUNTRIES[proxy_country] = sorted(
             PROXY_COUNTRIES[proxy_country], key=lambda k: k['response_time'])[:MAX_PROXIES_IN_COUNTRY]
 
-        proxy_counter = 1
-        for proxy_info in PROXY_COUNTRIES[proxy_country]:
-            template = env.get_template('forwarding.conf')
+        connect_port = FIRST_LOCAL_PORT + country_counter
 
-            proxy_info['connect_port'] = FIRST_LOCAL_PORT + country_counter * MAX_PROXIES_IN_COUNTRY + proxy_counter
-            proxy_info['proxy_line'] = 'http://{external_ip}:{connect_port}'.format(
-                external_ip=EXTERNAL_IP,
-                connect_port=proxy_info['connect_port']
-            )
+        template = env.get_template('forwarding.jinja2')
+        data = template.render(
+            proxy_country=proxy_country,
+            connect_port=connect_port,
+            peers=PROXY_COUNTRIES[proxy_country]
+        )
+        squid_conf.write(data)
 
-            data = template.render(proxy_host=proxy_info['proxy_host'],
-                                   proxy_port=proxy_info['proxy_port'],
-                                   connect_port=proxy_info['connect_port'])
-            squid_conf.write(data + '\n')
-            proxy_counter += 1
-
-        squid_conf.write('###\n')
         country_counter += 1
 
     squid_conf.close()
@@ -132,8 +129,8 @@ def main():
     redis_conn.set('proxy_count_by_country', pickle.dumps(PROXY_COUNT_BY_COUNTRY))
     redis_conn.set('all_proxy_count', pickle.dumps(TMP_DATA['all_proxy_count']))
 
-    print('Done: %d proxies in %d countries saved to redis & squid conf' % (
-    TMP_DATA['all_proxy_count'], len(PROXY_COUNT_BY_COUNTRY)))
+    print('Done: %d proxies in %d countries saved to redis & squid conf' % (TMP_DATA['all_proxy_count'],
+                                                                            len(PROXY_COUNT_BY_COUNTRY)))
 
 
 if __name__ == '__main__':

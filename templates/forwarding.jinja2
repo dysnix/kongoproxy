@@ -1,0 +1,7 @@
+# Proxies for country {{ proxy_country }}
+http_port {{ connect_port }} name={{ proxy_country }}
+acl {{ proxy_country }} myportname {{ proxy_country }}
+{% for peer in peers %}
+cache_peer {{ peer.proxy_host }} parent {{ peer.proxy_port }} 0 no-query proxy-only no-digest name={{ peer.name }}
+cache_peer_access {{ peer.name }} deny !{{ proxy_country }}
+{% endfor %}

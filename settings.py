@@ -27,8 +27,6 @@ SQUID_CONF_PATH = 'etc/forwarding.conf'
 
 EXTERNAL_IP = ''
 
-SQUID3_PATH = '/usr/sbin/squid3'
-
 MAX_PROXIES_IN_COUNTRY = 100
 
 EXTRA_COUNTRIES = {}

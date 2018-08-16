@@ -108,7 +108,7 @@ def update_squid3_forward_conf():
 
     squid_conf.close()
 
-    subprocess.call([SQUID3_PATH, '-k', 'reconfigure'])
+    subprocess.call(['docker', 'exec', 'squid', 'kill', '-s', 'HUP', '1'])
 
     logging.info('Squid3 conf updated')
 

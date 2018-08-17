@@ -35,6 +35,8 @@ DOCKER_PATH = "/usr/bin/docker"
 
 DOCKER_CONTAINER_NAME_SQUID = "squid"
 
+API_PORT = 3000
+
 try:
     from local_settings import *
 except ImportError:

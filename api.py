@@ -4,7 +4,7 @@ from flask import Flask
 from flask import abort
 from flask import jsonify
 
-from settings import REDIS_HOST, REDIS_PORT, REDIS_DB
+from settings import REDIS_HOST, REDIS_PORT, REDIS_DB, API_PORT
 
 app = Flask(__name__)
 
@@ -44,4 +44,4 @@ def proxy_get(code):
 
 
 if __name__ == "__main__":
-    app.run(port=3000)
+    app.run(port=API_PORT)

@@ -18,10 +18,10 @@ monkey.patch_all()
 
 jobs = []
 PROXY_COUNT_BY_COUNTRY = {}
+PROXY_COUNTRIES_CONNECT_INFO = {}
 TMP_DATA = {'all_proxy_count': 0}
 PROXY_COUNTRIES = {c.alpha_2: [] for c in pycountry.countries}
 PROXY_COUNTRIES.update(EXTRA_COUNTRIES)
-
 redis_conn = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
 
 env = Environment(loader=FileSystemLoader('templates'))
@@ -91,10 +91,20 @@ def update_squid3_forward_conf():
 
     country_counter = 1
     for proxy_country in sorted(PROXY_COUNTRIES.keys()):
+        if not PROXY_COUNTRIES[proxy_country]:
+            logging.debug('Any proxies found in country {proxy_country}. Continue..'.format(proxy_country=proxy_country))
+            continue
+
         PROXY_COUNTRIES[proxy_country] = sorted(
             PROXY_COUNTRIES[proxy_country], key=lambda k: k['response_time'])[:MAX_PROXIES_IN_COUNTRY]
 
         connect_port = FIRST_LOCAL_PORT + country_counter
+        proxy_line = "http://{external_ip}:{connect_port}".format(external_ip=EXTERNAL_IP, connect_port=connect_port)
+
+        PROXY_COUNTRIES_CONNECT_INFO[proxy_country] = {
+            "connect_port": connect_port,
+            "proxy_line": proxy_line
+        }
 
         template = env.get_template('forwarding.jinja2')
         data = template.render(
@@ -126,6 +136,7 @@ def main():
     update_squid3_forward_conf()
 
     redis_conn.set('proxy_countries', pickle.dumps(PROXY_COUNTRIES))
+    redis_conn.set('proxy_countries_connect_info', pickle.dumps(PROXY_COUNTRIES_CONNECT_INFO))
     redis_conn.set('proxy_count_by_country', pickle.dumps(PROXY_COUNT_BY_COUNTRY))
     redis_conn.set('all_proxy_count', pickle.dumps(TMP_DATA['all_proxy_count']))
 

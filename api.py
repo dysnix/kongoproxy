@@ -1,6 +1,5 @@
 import pickle
 import redis
-import random
 from flask import Flask
 from flask import abort
 from flask import jsonify
@@ -24,26 +23,24 @@ def countries():
 
 @app.route("/countries/<code>/")
 def proxy_list(code):
-    countries = pickle.loads(redis_conn.get('proxy_countries'))
-    proxy_list = countries.get(code)
+    countries_connect_info = pickle.loads(redis_conn.get('proxy_countries_connect_info'))
+    connect_info = countries_connect_info.get(code)
 
     if not proxy_list:
         abort(404)
 
-    return jsonify(proxy_list=proxy_list)
+    return jsonify(proxy_list=[connect_info])
 
 
 @app.route("/countries/<code>/get/")
 def proxy_get(code):
-    countries = pickle.loads(redis_conn.get('proxy_countries'))
-    proxy_list = countries.get(code)
+    countries_connect_info = pickle.loads(redis_conn.get('proxy_countries_connect_info'))
+    connect_info = countries_connect_info.get(code)
 
     if not proxy_list:
         abort(404)
 
-    random_proxy = random.choice(proxy_list)
-
-    return jsonify(proxy=random_proxy)
+    return jsonify(proxy=connect_info)
 
 
 if __name__ == "__main__":

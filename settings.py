@@ -29,7 +29,7 @@ EXTERNAL_IP = ''
 
 MAX_PROXIES_IN_COUNTRY = 100
 
-EXTRA_COUNTRIES = {}
+EXTRA_COUNTRIES = {'THA': [], 'TUN': [], 'UKR': [], 'KAZ': [], 'SYR': [], 'EU': [], '-': []}
 
 try:
     from local_settings import *

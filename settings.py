@@ -31,6 +31,10 @@ MAX_PROXIES_IN_COUNTRY = 100
 
 EXTRA_COUNTRIES = {'THA': [], 'TUN': [], 'UKR': [], 'KAZ': [], 'SYR': [], 'EU': [], '-': []}
 
+DOCKER_PATH = "/usr/bin/docker"
+
+DOCKER_CONTAINER_NAME_SQUID = "squid"
+
 try:
     from local_settings import *
 except ImportError:

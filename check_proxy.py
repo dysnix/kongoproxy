@@ -12,7 +12,8 @@ from parsers import get_all_proxies
 from neutrinoapi import check_neutrinoapi
 
 from settings import PROXY_CHECK_WORKERS, PROXY_CHECK_URL, PROXY_CHECK_TIMEOUT, REDIS_HOST, REDIS_PORT, REDIS_DB, \
-    FIRST_LOCAL_PORT, SQUID_CONF_PATH, EXTERNAL_IP, MAX_PROXIES_IN_COUNTRY, EXTRA_COUNTRIES, LOGGING_LEVEL
+    FIRST_LOCAL_PORT, SQUID_CONF_PATH, EXTERNAL_IP, MAX_PROXIES_IN_COUNTRY, EXTRA_COUNTRIES, LOGGING_LEVEL, \
+    DOCKER_PATH, DOCKER_CONTAINER_NAME_SQUID
 
 monkey.patch_all()
 
@@ -92,7 +93,8 @@ def update_squid3_forward_conf():
     country_counter = 1
     for proxy_country in sorted(PROXY_COUNTRIES.keys()):
         if not PROXY_COUNTRIES[proxy_country]:
-            logging.debug('Any proxies found in country {proxy_country}. Continue..'.format(proxy_country=proxy_country))
+            logging.debug(
+                'Any proxies found in country {proxy_country}. Continue..'.format(proxy_country=proxy_country))
             continue
 
         PROXY_COUNTRIES[proxy_country] = sorted(
@@ -118,7 +120,7 @@ def update_squid3_forward_conf():
 
     squid_conf.close()
 
-    subprocess.call(['docker', 'exec', 'squid', 'kill', '-s', 'HUP', '1'])
+    subprocess.call([DOCKER_PATH, 'exec', DOCKER_CONTAINER_NAME_SQUID, 'kill', '-s', 'HUP', '1'])
 
     logging.info('Squid3 conf updated')
 

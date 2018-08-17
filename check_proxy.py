@@ -93,6 +93,7 @@ def update_squid3_forward_conf():
     country_counter = 1
     for proxy_country in sorted(PROXY_COUNTRIES.keys()):
         if not PROXY_COUNTRIES[proxy_country]:
+            country_counter += 1
             logging.debug(
                 'Any proxies found in country {proxy_country}. Continue..'.format(proxy_country=proxy_country))
             continue

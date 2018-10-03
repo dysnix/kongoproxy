@@ -12,7 +12,7 @@ frontend {{ proxy_country }}
 backend {{ proxy_country }}
   balance roundrobin
   mode http
-  option httpchk GET http://144.76.202.92/chea9iquae/ HTTP/1.0
+  option httpchk GET {{ proxy_check_url }} HTTP/1.0
   http-check expect status 200
   default-server inter 10s fall 1 rise 1
 {% for peer in peers %}  server {{ peer.name }} {{ peer.proxy_host }}:{{ peer.proxy_port }} check

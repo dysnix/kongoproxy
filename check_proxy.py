@@ -115,7 +115,8 @@ def update_haproxy_forward_conf():
             proxy_country=proxy_country,
             connect_port=connect_port,
             peers=PROXY_COUNTRIES[proxy_country],
-            proxy_src_whitelist=PROXY_SRC_WHITELIST
+            proxy_src_whitelist=PROXY_SRC_WHITELIST,
+            proxy_check_url=PROXY_CHECK_URL
         )
         haproxy_conf.write(data)
 

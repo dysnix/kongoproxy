@@ -23,7 +23,7 @@ REDIS_DB = 0
 
 FIRST_LOCAL_PORT = 3128
 
-SQUID_CONF_PATH = 'etc/forwarding.conf'
+HAPROXY_CONF_PATH = 'etc/forwarding.conf'
 
 EXTERNAL_IP = ''
 
@@ -33,7 +33,7 @@ EXTRA_COUNTRIES = {'THA': [], 'TUN': [], 'UKR': [], 'KAZ': [], 'SYR': [], 'EU': 
 
 DOCKER_PATH = "/usr/bin/docker"
 
-DOCKER_CONTAINER_NAME_SQUID = "squid"
+DOCKER_CONTAINER_NAME_HAPROXY = "haproxy"
 
 API_PORT = 3000
 

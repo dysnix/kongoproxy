@@ -1,3 +1,4 @@
+import time
 import redis
 import gevent
 import pickle
@@ -12,8 +13,8 @@ from parsers import get_all_proxies
 from neutrinoapi import check_neutrinoapi
 
 from settings import PROXY_CHECK_WORKERS, PROXY_CHECK_URL, PROXY_CHECK_TIMEOUT, REDIS_HOST, REDIS_PORT, REDIS_DB, \
-    FIRST_LOCAL_PORT, SQUID_CONF_PATH, EXTERNAL_IP, MAX_PROXIES_IN_COUNTRY, EXTRA_COUNTRIES, LOGGING_LEVEL, \
-    DOCKER_PATH, DOCKER_CONTAINER_NAME_SQUID
+    FIRST_LOCAL_PORT, HAPROXY_CONF_PATH, EXTERNAL_IP, MAX_PROXIES_IN_COUNTRY, EXTRA_COUNTRIES, LOGGING_LEVEL, \
+    DOCKER_PATH, DOCKER_CONTAINER_NAME_HAPROXY
 
 monkey.patch_all()
 
@@ -83,12 +84,12 @@ def proxy_check(proxy):
     return result
 
 
-def update_squid3_forward_conf():
+def update_haproxy_forward_conf():
     if not PROXY_COUNT_BY_COUNTRY:
-        logging.error('Any new proxies found/checked. Abort squid reconfigure.')
+        logging.error('Any new proxies found/checked. Abort haproxy reconfigure.')
         return False
 
-    squid_conf = open(SQUID_CONF_PATH, 'w+')
+    haproxy_conf = open(HAPROXY_CONF_PATH, 'w+')
 
     country_counter = 1
     for proxy_country in sorted(PROXY_COUNTRIES.keys()):
@@ -109,21 +110,23 @@ def update_squid3_forward_conf():
             "proxy_line": proxy_line
         }
 
-        template = env.get_template('forwarding.jinja2')
+        template = env.get_template('haproxy.jinja2')
         data = template.render(
             proxy_country=proxy_country,
             connect_port=connect_port,
             peers=PROXY_COUNTRIES[proxy_country]
         )
-        squid_conf.write(data)
+        haproxy_conf.write(data)
 
         country_counter += 1
 
-    squid_conf.close()
+    haproxy_conf.close()
 
-    subprocess.call([DOCKER_PATH, 'exec', DOCKER_CONTAINER_NAME_SQUID, 'kill', '-s', 'HUP', '1'])
+    time.sleep(60)
+    haproxy_pid = open("/var/run/haproxy.pid", "r").read().strip()
+    subprocess.call(["/usr/sbin/haproxy", "-f", "/etc/haproxy/haproxy.cfg", "-f", "/root/kongoproxy_haproxy/etc/forwarding.conf", "-p", "/var/run/haproxy.pid", "-sf", haproxy_pid])
 
-    logging.info('Squid3 conf updated')
+    logging.info('Haproxy conf updated & service reloaded')
 
 
 def main():
@@ -136,14 +139,14 @@ def main():
 
     gevent.joinall(jobs)
 
-    update_squid3_forward_conf()
+    update_haproxy_forward_conf()
 
     redis_conn.set('proxy_countries', pickle.dumps(PROXY_COUNTRIES))
     redis_conn.set('proxy_countries_connect_info', pickle.dumps(PROXY_COUNTRIES_CONNECT_INFO))
     redis_conn.set('proxy_count_by_country', pickle.dumps(PROXY_COUNT_BY_COUNTRY))
     redis_conn.set('all_proxy_count', pickle.dumps(TMP_DATA['all_proxy_count']))
 
-    print('Done: %d proxies in %d countries saved to redis & squid conf' % (TMP_DATA['all_proxy_count'],
+    print('Done: %d proxies in %d countries saved to redis & haproxy conf' % (TMP_DATA['all_proxy_count'],
                                                                             len(PROXY_COUNT_BY_COUNTRY)))
 
 

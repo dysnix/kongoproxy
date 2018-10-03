@@ -1,3 +1,14 @@
+# Kongoproxy
+
+HAproxy as forwarding proxy with childs + proxy list checker
+
+## Architecture
+![Architecture](kongoproxy-arch.png)
+
+## Dashboards
+
+![Dashboard](dashboard.png)
+
 ## Configure
 
 Please set params to `local_settings.py`

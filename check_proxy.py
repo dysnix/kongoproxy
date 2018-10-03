@@ -14,7 +14,7 @@ from neutrinoapi import check_neutrinoapi
 
 from settings import PROXY_CHECK_WORKERS, PROXY_CHECK_URL, PROXY_CHECK_TIMEOUT, REDIS_HOST, REDIS_PORT, REDIS_DB, \
     FIRST_LOCAL_PORT, HAPROXY_CONF_PATH, EXTERNAL_IP, MAX_PROXIES_IN_COUNTRY, EXTRA_COUNTRIES, LOGGING_LEVEL, \
-    DOCKER_PATH, DOCKER_CONTAINER_NAME_HAPROXY
+    DOCKER_PATH, DOCKER_CONTAINER_NAME_HAPROXY, PROXY_SRC_WHITELIST
 
 monkey.patch_all()
 
@@ -114,7 +114,8 @@ def update_haproxy_forward_conf():
         data = template.render(
             proxy_country=proxy_country,
             connect_port=connect_port,
-            peers=PROXY_COUNTRIES[proxy_country]
+            peers=PROXY_COUNTRIES[proxy_country],
+            proxy_src_whitelist=PROXY_SRC_WHITELIST
         )
         haproxy_conf.write(data)
 
@@ -122,7 +123,7 @@ def update_haproxy_forward_conf():
 
     haproxy_conf.close()
 
-    time.sleep(60)
+    time.sleep(120)
     haproxy_pid = open("/var/run/haproxy.pid", "r").read().strip()
     subprocess.call(["/usr/sbin/haproxy", "-f", "/etc/haproxy/haproxy.cfg", "-f", "/root/kongoproxy_haproxy/etc/forwarding.conf", "-p", "/var/run/haproxy.pid", "-sf", haproxy_pid])
 

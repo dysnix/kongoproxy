@@ -37,6 +37,8 @@ DOCKER_CONTAINER_NAME_HAPROXY = "haproxy"
 
 API_PORT = 3000
 
+PROXY_SRC_WHITELIST = ''
+
 try:
     from local_settings import *
 except ImportError:

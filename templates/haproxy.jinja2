@@ -1,0 +1,19 @@
+frontend {{ proxy_country }}
+  bind *:{{ connect_port }}
+  mode http
+  option httplog
+  log global
+  default_backend {{ proxy_country }}
+  {% if proxy_src_whitelist %}
+  acl white_list src {{ proxy_src_whitelist }}
+  tcp-request content accept if white_list
+  tcp-request content reject
+  {% endif %}
+backend {{ proxy_country }}
+  balance roundrobin
+  mode http
+  option httpchk GET http://144.76.202.92/chea9iquae/ HTTP/1.0
+  http-check expect status 200
+  default-server inter 10s fall 1 rise 1
+{% for peer in peers %}  server {{ peer.name }} {{ peer.proxy_host }}:{{ peer.proxy_port }} check
+{% endfor %}

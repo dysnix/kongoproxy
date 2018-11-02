@@ -27,7 +27,7 @@ PROXY_COUNTRIES.update(EXTRA_COUNTRIES)
 redis_conn = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
 
 env = Environment(loader=FileSystemLoader('templates'))
-
+BLOCKIPS = [i.split(',') for i in open(settings.BLOCKIPS_CSV_PATH, 'r').readlines()]
 
 def proxy_check(proxy):
     proxy_addr = proxy['address']
@@ -58,6 +58,9 @@ def proxy_check(proxy):
         return None
 
     if check_neutrinoapi(real_ip):
+        return None
+
+    if real_ip in BLOCKIPS:
         return None
 
     if not PROXY_COUNTRIES.get(country_code):

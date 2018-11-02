@@ -39,6 +39,8 @@ API_PORT = 3000
 
 PROXY_SRC_WHITELIST = ''
 
+BLOCKIPS_CSV_PATH = ''
+
 try:
     from local_settings import *
 except ImportError:

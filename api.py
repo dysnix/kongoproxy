@@ -31,6 +31,16 @@ def proxy_list(code):
 
     return jsonify(proxy_list=[connect_info])
 
+@app.route("/countries/<code>/list")
+def proxy_list_all(code):
+    proxy_countries = pickle.loads(redis_conn.get('proxy_countries'))
+    proxy_list_all = proxy_countries.get(code)
+
+    if not proxy_list:
+        abort(404)
+
+    return jsonify(proxy_list=proxy_list_all)
+
 
 @app.route("/countries/<code>/get/")
 def proxy_get(code):

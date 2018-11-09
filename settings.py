@@ -41,6 +41,10 @@ PROXY_SRC_WHITELIST = ''
 
 BLOCKIPS_CSV_PATH = ''
 
+
+NEUTRINOAPI_BLOCKLIST_URL = ''
+NEUTRINOAPI_BLOCKLIST_PATH = ''
+
 try:
     from local_settings import *
 except ImportError:

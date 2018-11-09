@@ -10,11 +10,10 @@ from gevent import monkey, pool
 from jinja2 import Environment, FileSystemLoader
 
 from parsers import get_all_proxies
-from neutrinoapi import check_neutrinoapi
 
 from settings import PROXY_CHECK_WORKERS, PROXY_CHECK_URL, PROXY_CHECK_TIMEOUT, REDIS_HOST, REDIS_PORT, REDIS_DB, \
     FIRST_LOCAL_PORT, HAPROXY_CONF_PATH, EXTERNAL_IP, MAX_PROXIES_IN_COUNTRY, EXTRA_COUNTRIES, LOGGING_LEVEL, \
-    DOCKER_PATH, DOCKER_CONTAINER_NAME_HAPROXY, PROXY_SRC_WHITELIST
+    DOCKER_PATH, DOCKER_CONTAINER_NAME_HAPROXY, PROXY_SRC_WHITELIST, BLOCKIPS_CSV_PATH, NEUTRINOAPI_BLOCKLIST_PATH
 
 monkey.patch_all()
 
@@ -27,7 +26,8 @@ PROXY_COUNTRIES.update(EXTRA_COUNTRIES)
 redis_conn = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
 
 env = Environment(loader=FileSystemLoader('templates'))
-BLOCKIPS = [i.split(',') for i in open(settings.BLOCKIPS_CSV_PATH, 'r').readlines()]
+
+BLOCKIPS = set([i.split(',')[0] for i in open(BLOCKIPS_CSV_PATH, 'r').readlines() + open(NEUTRINOAPI_BLOCKLIST_PATH, 'r').readlines()])
 
 def proxy_check(proxy):
     proxy_addr = proxy['address']
@@ -57,10 +57,8 @@ def proxy_check(proxy):
         logging.fatal('Unsupported country {country_code} detected'.format(country_code=country_code))
         return None
 
-    if check_neutrinoapi(real_ip):
-        return None
-
     if real_ip in BLOCKIPS:
+        logging.info('Address {real_ip} found in blacklist'.format(real_ip=real_ip))
         return None
 
     if not PROXY_COUNTRIES.get(country_code):
